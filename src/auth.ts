@@ -4,12 +4,14 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/prisma"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  
   adapter: PrismaAdapter(prisma),
   providers: [
     Strava({
       authorization: {
         params: {
-          scope: "profile:read_all,activity:read,activity:read_all",
+          scope: "activity:read",
+          // scope: "profile:read_all,activity:read,activity:read_all",
         },
       },
       profile(profile) {
