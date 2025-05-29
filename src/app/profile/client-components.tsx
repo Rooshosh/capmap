@@ -8,6 +8,10 @@ export function LoggedInView({ session }: { session: Session }) {
     return (
         <>
           Signed in as {session.user?.name || "(no name)"} <br />
+
+          <pre>{JSON.stringify(session, null, 2)}</pre>
+
+            <br/>
           <button onClick={() => signOut()}>Sign out</button>
         </>
       )
