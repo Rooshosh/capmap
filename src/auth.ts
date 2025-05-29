@@ -10,8 +10,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Strava({
       authorization: {
         params: {
-          scope: "activity:read",
-          // scope: "profile:read_all,activity:read,activity:read_all",
+          scope: "profile:read_all,activity:read,activity:read_all",
         },
       },
       profile(profile) {
