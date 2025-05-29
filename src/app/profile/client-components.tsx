@@ -2,6 +2,7 @@
 
 import { Session } from "next-auth"
 import { signIn, signOut } from "next-auth/react"
+import Image from "next/image";
 
 export function LoggedInView({ session }: { session: Session }) {
     return (
@@ -15,8 +16,14 @@ export function LoggedInView({ session }: { session: Session }) {
 export function LoggedOutView() {
     return (
         <>
-            Not signed in <br />
-            <button onClick={() => signIn()}>Sign in</button>
+            <button onClick={() => signIn("strava")}>
+                <Image
+                    src="/btn_strava_connect_with_orange.svg"
+                    alt="Connect with Strava"
+                    width={200}
+                    height={40}
+                />
+            </button>
         </>
     )
 }

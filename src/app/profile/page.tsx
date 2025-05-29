@@ -1,22 +1,11 @@
-"use client"
+import { getServerSession } from "next-auth"
+import { LoggedInView, LoggedOutView } from "./client-components"
 
-import { useSession, signIn, signOut } from "next-auth/react"
-
-export default function ProfilePage() {
-    const { data: session } = useSession()
+export default async function ProfilePage() {
+    const session = await getServerSession()
 
     if (session) {
-      return (
-        <>
-          Signed in as {session.user?.name || "(no name)"} <br />
-          <button onClick={() => signOut()}>Sign out</button>
-        </>
-      )
+        return <LoggedInView session={session} />
     }
-    return (
-        <>
-            Not signed in <br />
-            <button onClick={() => signIn()}>Sign in</button>
-        </>
-    )
+    return <LoggedOutView />
 }
