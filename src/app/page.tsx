@@ -7,6 +7,12 @@ export default function Home() {
 
     <div>
       <Link href="/profile">Profile Page Client Rendered</Link>
+      <Link href="/profile">Profile Page Client Rendered</Link>
+      <Link href="/profile">Profile Page Client Rendered</Link>
+      <Link href="/profile">Profile Page Client Rendered</Link>
+      <Link href="/profile">Profile Page Client Rendered</Link>
+
+      <Link href="/profile">Profile Page Client Rendered</Link>
       <br /> <br />
       <Link href="/profile-server">Profile Page Server Rendered</Link>
     </div>
