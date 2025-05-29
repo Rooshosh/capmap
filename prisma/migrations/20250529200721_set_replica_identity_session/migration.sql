@@ -1,0 +1,1 @@
+ALTER TABLE "Session" REPLICA IDENTITY USING INDEX "Session_sessionToken_key";

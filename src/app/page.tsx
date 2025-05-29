@@ -7,6 +7,8 @@ export default function Home() {
 
     <div>
       <Link href="/profile">Profile Page</Link>
+      <br /> <br />
+      <Link href="/profile-v5">Profile Page v5</Link>
     </div>
 
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
