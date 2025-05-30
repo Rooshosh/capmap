@@ -1,27 +1,8 @@
-import { auth } from "@/auth"
-import { SignIn } from "@/components/signin-button"
-import { SignOut } from "@/components/signout-button"
-import UserAvatar from "@/components/UserAvatar"
-import { FetchActivities } from "@/components/FetchActivities"
+"use client";
+import dynamic from "next/dynamic";
 
-export default async function ProfilePage() {
-    const session = await auth()
+const Map = dynamic(() => import("../components/FullScreenMap"), { ssr: false });
 
-    if (!session) return <>
-        <div>No current session</div>
-        <br />
-        <SignIn />
-    </>
-
-    return <>
-        <div>Found session</div>
-        <UserAvatar />
-        <div>
-            <pre>{JSON.stringify(session, null, 2)}</pre>
-        </div>
-        <br />
-        <FetchActivities />
-        <br />
-        <SignOut />
-    </>
+export default function Home() {
+  return <Map />;
 }
