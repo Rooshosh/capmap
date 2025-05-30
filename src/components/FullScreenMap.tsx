@@ -1,6 +1,5 @@
 "use client";
-import * as React from "react";
-import Map, { NavigationControl, FullscreenControl, ScaleControl, GeolocateControl } from "react-map-gl/mapbox";
+import Map, { NavigationControl, GeolocateControl } from "react-map-gl/mapbox";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
