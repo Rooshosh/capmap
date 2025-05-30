@@ -176,6 +176,26 @@ model DetailedActivity {
   splits_standard     Json?
   laps                Json?
   best_efforts        Json?
+  // --- Additional fields from Strava API responses ---
+  resource_state      Int?
+  utc_offset          Int?
+  location_city       String?
+  location_state      String?
+  location_country    String?
+  visibility          String?
+  has_heartrate       Boolean?
+  average_heartrate   Float?
+  max_heartrate       Float?
+  heartrate_opt_out   Boolean?
+  display_hide_heartrate_option Boolean?
+  from_accepted_tag   Boolean?
+  pr_count            Int?
+  suffer_score        Int?
+  perceived_exertion  Int?
+  prefer_perceived_exertion Boolean?
+  stats_visibility    Json?
+  similar_activities  Json?
+  available_zones     Json?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }

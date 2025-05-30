@@ -61,10 +61,22 @@ export async function POST(req: NextRequest) {
     const activity = await res.json();
 
     // Store in DB (upsert to avoid duplicates)
+    const id = activity.id.toString();
+
     const stored = await prisma.detailedActivity.upsert({
-      where: { id: activity.id.toString() },
-      update: { ...activity, id: activity.id.toString(), upload_id: activity.upload_id?.toString() },
-      create: { ...activity, id: activity.id.toString(), upload_id: activity.upload_id?.toString() },
+      where: { id },
+      update: {
+        ...activity,
+        id,
+        upload_id: activity.upload_id ? activity.upload_id.toString() : undefined,
+        upload_id_str: activity.upload_id_str ? activity.upload_id_str.toString() : undefined,
+      },
+      create: {
+        ...activity,
+        id,
+        upload_id: activity.upload_id ? activity.upload_id.toString() : undefined,
+        upload_id_str: activity.upload_id_str ? activity.upload_id_str.toString() : undefined,
+      },
     });
 
     return NextResponse.json(stored);
