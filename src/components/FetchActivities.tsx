@@ -75,8 +75,9 @@ type SummaryActivity = {
 export type ActivityPreviewType = SummaryActivity & { imported?: boolean };
 
 // ActivityPreview component
-export function ActivityPreview({ activity, imported, onImport }: { activity: ActivityPreviewType; imported: boolean; onImport?: () => Promise<void> }) {
+export function ActivityPreview({ activity, imported, hasTrack, onImport, onTrackImported }: { activity: ActivityPreviewType; imported: boolean; hasTrack: boolean; onImport?: () => Promise<void>; onTrackImported?: () => Promise<void> }) {
   const [importing, setImporting] = useState(false);
+  const [fetchingTrack, setFetchingTrack] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const title = activity.name;
@@ -109,6 +110,30 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
     }
   }
 
+  async function handleFetchTrack() {
+    setFetchingTrack(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/strava/activities/${activity.id}/streams?keys=latlng&key_by_type=true`);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to fetch GPS track");
+      }
+      const data = await res.json();
+      // Print the result in the browser console
+      console.log("GPS Track for activity", activity.id, data);
+      if (onTrackImported) await onTrackImported();
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("An unknown error occurred");
+      }
+    } finally {
+      setFetchingTrack(false);
+    }
+  }
+
   return (
     <div
       style={{
@@ -133,6 +158,7 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
       <div style={{ marginTop: 8, fontWeight: 500, color: imported ? '#388e3c' : '#bdbdbd' }}>
         {imported ? 'Imported' : 'Not Imported'}
       </div>
+      {/* Import button for not imported */}
       {!imported && (
         <button
           onClick={handleImport}
@@ -153,6 +179,36 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
           {importing ? 'Importing...' : 'Import'}
         </button>
       )}
+      {/* GPS Track status for imported activities */}
+      {imported && hasTrack && (
+        <div style={{ marginTop: 12, color: '#388e3c', fontWeight: 500 }}>
+          GPS Track Imported
+        </div>
+      )}
+      {imported && !hasTrack && (
+        <button
+          onClick={handleFetchTrack}
+          disabled={fetchingTrack || distance <= 0}
+          style={{
+            marginTop: 12,
+            padding: '8px 16px',
+            borderRadius: 6,
+            border: 'none',
+            background: fetchingTrack || distance <= 0 ? '#bdbdbd' : '#388e3c',
+            color: '#fff',
+            fontWeight: 500,
+            cursor: fetchingTrack || distance <= 0 ? 'not-allowed' : 'pointer',
+            fontSize: 15,
+            transition: 'background 0.2s',
+          }}
+        >
+          {distance <= 0
+            ? 'No GPS Track Available'
+            : fetchingTrack
+            ? 'Fetching GPS Track...'
+            : 'Fetch Activity GPS Track'}
+        </button>
+      )}
       {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
     </div>
   );
@@ -161,6 +217,7 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
 export function FetchActivities() {
   const [activities, setActivities] = useState<SummaryActivity[] | null>(null);
   const [importedIds, setImportedIds] = useState<string[]>([]);
+  const [activityIdsWithTrack, setActivityIdsWithTrack] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -169,6 +226,7 @@ export function FetchActivities() {
     setError(null);
     setActivities(null);
     setImportedIds([]);
+    setActivityIdsWithTrack([]);
     try {
       // Fetch summary activities
       const res = await fetch("/api/strava/activities");
@@ -178,6 +236,8 @@ export function FetchActivities() {
 
       // Fetch imported activity IDs
       await fetchImportedIds();
+      // Fetch activity IDs with GPS track
+      await fetchActivityIdsWithTrack();
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
@@ -193,8 +253,15 @@ export function FetchActivities() {
     const importedRes = await fetch("/api/strava/imported-activity-ids");
     if (importedRes.ok) {
       const ids = await importedRes.json();
-      console.log("importedIds", ids);
       setImportedIds(ids.map((id: string | number) => id.toString()));
+    }
+  }
+
+  async function fetchActivityIdsWithTrack() {
+    const res = await fetch("/api/strava/activities-with-track");
+    if (res.ok) {
+      const ids = await res.json();
+      setActivityIdsWithTrack(ids.map((id: string | number) => id.toString()));
     }
   }
 
@@ -218,7 +285,12 @@ export function FetchActivities() {
               key={activity.id}
               activity={activity}
               imported={importedIds.includes(activity.id.toString())}
-              onImport={fetchImportedIds}
+              hasTrack={activityIdsWithTrack.includes(activity.id.toString())}
+              onImport={async () => {
+                await fetchImportedIds();
+                await fetchActivityIdsWithTrack();
+              }}
+              onTrackImported={fetchActivityIdsWithTrack}
             />
           ))}
         </div>

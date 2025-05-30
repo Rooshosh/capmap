@@ -38,11 +38,9 @@ interface StravaProfile {
   is_winback_via_view?: boolean;
   clubs?: Prisma.InputJsonValue;
   shoes?: Prisma.InputJsonValue;
-  // ...add any other fields you use
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  
   adapter: PrismaAdapter(prisma),
   providers: [
     Strava({
@@ -52,7 +50,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
       profile(profile) {
-        console.log(profile)
         return {
           id: String(profile.id), // Hack, would have expected provider package to handle this
           name: `${profile.firstname} ${profile.lastname}`,
@@ -66,12 +63,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // session: {
   //   strategy: "jwt",
   // },
-  callbacks: {
+  // callbacks: {
+  //   async signIn({ user, account, profile }) {
+  //     // No DB writes here; just allow sign-in
+  //     return true;
+  //   },
+  // },
+  events: {
     async signIn({ user, account, profile }) {
-      // Only remove athlete field for Strava accounts
-      if (account?.provider === "strava" && profile) {
-        const p = profile as StravaProfile
+      console.log("signIn");
+      console.log("User:", user);
+      console.log("Account:", account);
+      console.log("Profile:", profile);
 
+      if (account?.provider === "strava" && profile) {
+        const p = profile as StravaProfile;
         await prisma.stravaAccount.upsert({
           where: { userId: user.id },
           update: {
@@ -145,9 +151,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             clubs: p.clubs,
             shoes: p.shoes,
           }
-        })
+        });
       }
-      return true;
     },
   },
 })

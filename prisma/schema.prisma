@@ -2,16 +2,16 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
- 
+
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma/client"
+  // output   = "../src/generated/prisma/client" // Recommended by Prisma docs, but caused lint errors in Vercel build
 }
- 
+
 model User {
   id            String          @id @default(cuid())
   name          String?
-  email         String?          @unique
+  email         String?         @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -19,11 +19,11 @@ model User {
   // Optional for WebAuthn support
   Authenticator Authenticator[]
   stravaAccount StravaAccount?
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
- 
+
 model Account {
   userId            String
   type              String
@@ -36,33 +36,33 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@id([provider, providerAccountId])
 }
- 
+
 model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
- 
+
 model VerificationToken {
   identifier String
   token      String
   expires    DateTime
- 
+
   @@id([identifier, token])
 }
- 
+
 // Optional for WebAuthn support
 model Authenticator {
   credentialID         String  @unique
@@ -73,129 +73,137 @@ model Authenticator {
   credentialDeviceType String
   credentialBackedUp   Boolean
   transports           String?
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@id([userId, credentialID])
 }
 
 model StravaAccount {
-  id                     String   @id @default(cuid())
-  userId                 String   @unique
-  stravaId               String   @unique
-  username               String?
-  resourceState          Int?
-  firstname              String?
-  lastname               String?
-  bio                    String?
-  city                   String?
-  state                  String?
-  country                String?
-  sex                    String?
-  premium                Boolean?
-  summit                 Boolean?
-  createdAtStrava        DateTime? // Strava's created_at
-  updatedAtStrava        DateTime? // Strava's updated_at
-  badgeTypeId            Int?
-  weight                 Int?
-  profile                String?
-  profileMedium          String?
-  friend                 Int?      // nullable, can be null
-  follower               Int?      // nullable, can be null
-  blocked                Boolean?
-  canFollow              Boolean?
-  followerCount          Int?
-  friendCount            Int?
-  mutualFriendCount      Int?
-  athleteType            Int?
-  datePreference         String?
-  measurementPreference  String?
-  postableClubsCount     Int?
-  isWinbackViaUpload     Boolean?
-  isWinbackViaView       Boolean?
-  clubs                  Json?     // Store as JSON, or normalize if you want
-  shoes                  Json?     // Store as JSON, or normalize if you want
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  stravaId              String    @unique
+  username              String?
+  resourceState         Int?
+  firstname             String?
+  lastname              String?
+  bio                   String?
+  city                  String?
+  state                 String?
+  country               String?
+  sex                   String?
+  premium               Boolean?
+  summit                Boolean?
+  createdAtStrava       DateTime? // Strava's created_at
+  updatedAtStrava       DateTime? // Strava's updated_at
+  badgeTypeId           Int?
+  weight                Int?
+  profile               String?
+  profileMedium         String?
+  friend                Int? // nullable, can be null
+  follower              Int? // nullable, can be null
+  blocked               Boolean?
+  canFollow             Boolean?
+  followerCount         Int?
+  friendCount           Int?
+  mutualFriendCount     Int?
+  athleteType           Int?
+  datePreference        String?
+  measurementPreference String?
+  postableClubsCount    Int?
+  isWinbackViaUpload    Boolean?
+  isWinbackViaView      Boolean?
+  clubs                 Json? // Store as JSON, or normalize if you want
+  shoes                 Json? // Store as JSON, or normalize if you want
 
-  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model DetailedActivity {
-  id                  String   @id
-  external_id         String? 
-  upload_id           String?
-  athlete             Json     // MetaAthlete
-  name                String
-  distance            Float
-  moving_time         Int
-  elapsed_time        Int
-  total_elevation_gain Float
-  elev_high           Float?
-  elev_low            Float?
-  type                String
-  sport_type          String
-  start_date          DateTime
-  start_date_local    DateTime
-  timezone            String
-  start_latlng        Json?
-  end_latlng          Json?
-  achievement_count   Int
-  kudos_count         Int
-  comment_count       Int
-  athlete_count       Int
-  photo_count         Int
-  total_photo_count   Int
-  map                 Json     // PolylineMap
-  trainer             Boolean
-  commute             Boolean
-  manual              Boolean
-  private             Boolean
-  flagged             Boolean
-  workout_type        Int?
-  upload_id_str       String?
-  average_speed       Float
-  max_speed           Float
-  has_kudoed          Boolean
-  hide_from_home      Boolean?
-  gear_id             String?
-  kilojoules          Float?
-  average_watts       Float?
-  device_watts        Boolean?
-  max_watts           Int?
-  weighted_average_watts Int?
-  description         String?
-  photos              Json?
-  gear                Json?
-  calories            Float?
-  segment_efforts     Json?
-  device_name         String?
-  embed_token         String?
-  splits_metric       Json?
-  splits_standard     Json?
-  laps                Json?
-  best_efforts        Json?
-  // --- Additional fields from Strava API responses ---
-  resource_state      Int?
-  utc_offset          Int?
-  location_city       String?
-  location_state      String?
-  location_country    String?
-  visibility          String?
-  has_heartrate       Boolean?
-  average_heartrate   Float?
-  max_heartrate       Float?
-  heartrate_opt_out   Boolean?
+  id                            String         @id
+  external_id                   String?
+  upload_id                     String?
+  athlete                       Json // MetaAthlete
+  name                          String
+  distance                      Float
+  moving_time                   Int
+  elapsed_time                  Int
+  total_elevation_gain          Float
+  elev_high                     Float?
+  elev_low                      Float?
+  type                          String
+  sport_type                    String
+  start_date                    DateTime
+  start_date_local              DateTime
+  timezone                      String
+  start_latlng                  Json?
+  end_latlng                    Json?
+  achievement_count             Int
+  kudos_count                   Int
+  comment_count                 Int
+  athlete_count                 Int
+  photo_count                   Int
+  total_photo_count             Int
+  map                           Json // PolylineMap
+  trainer                       Boolean
+  commute                       Boolean
+  manual                        Boolean
+  private                       Boolean
+  flagged                       Boolean
+  workout_type                  Int?
+  upload_id_str                 String?
+  average_speed                 Float
+  max_speed                     Float
+  has_kudoed                    Boolean
+  hide_from_home                Boolean?
+  gear_id                       String?
+  kilojoules                    Float?
+  average_watts                 Float?
+  device_watts                  Boolean?
+  max_watts                     Int?
+  weighted_average_watts        Int?
+  description                   String?
+  photos                        Json?
+  gear                          Json?
+  calories                      Float?
+  segment_efforts               Json?
+  device_name                   String?
+  embed_token                   String?
+  splits_metric                 Json?
+  splits_standard               Json?
+  laps                          Json?
+  best_efforts                  Json?
+  resource_state                Int?
+  utc_offset                    Int?
+  location_city                 String?
+  location_state                String?
+  location_country              String?
+  visibility                    String?
+  has_heartrate                 Boolean?
+  average_heartrate             Float?
+  max_heartrate                 Float?
+  heartrate_opt_out             Boolean?
   display_hide_heartrate_option Boolean?
-  from_accepted_tag   Boolean?
-  pr_count            Int?
-  suffer_score        Int?
-  perceived_exertion  Int?
-  prefer_perceived_exertion Boolean?
-  stats_visibility    Json?
-  similar_activities  Json?
-  available_zones     Json?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  from_accepted_tag             Boolean?
+  pr_count                      Int?
+  suffer_score                  Int?
+  perceived_exertion            Int?
+  prefer_perceived_exertion     Boolean?
+  stats_visibility              Json?
+  similar_activities            Json?
+  available_zones               Json?
+  createdAt                     DateTime       @default(now())
+  updatedAt                     DateTime       @updatedAt
+  ActivityTrack                 ActivityTrack?
+}
+
+model ActivityTrack {
+  id         String           @id @default(uuid())
+  activity   DetailedActivity @relation(fields: [activityId], references: [id])
+  activityId String           @unique
+  track      Json // Array of [lon, lat] pairs
+  createdAt  DateTime         @default(now())
 }
