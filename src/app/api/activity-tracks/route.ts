@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/prisma";
 
-export async function GET(req: NextRequest) {
+export async function GET(/* req: NextRequest */) {
   const tracks = await prisma.activityTrack.findMany();
   const features = tracks
     .filter(track => Array.isArray(track.track))

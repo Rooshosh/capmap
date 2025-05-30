@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import {  NextResponse } from "next/server";
 import { prisma } from "@/prisma";
 import * as turf from "@turf/turf";
 
@@ -16,7 +16,7 @@ function haversine([lat1, lng1]: [number, number], [lat2, lng2]: [number, number
   return R * c;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(/* req: NextRequest */) {
   const tracks = await prisma.activityTrack.findMany();
   const features = tracks
     .filter(track => Array.isArray(track.track))
