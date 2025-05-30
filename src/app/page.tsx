@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { SignIn } from "@/components/signin-button"
 import { SignOut } from "@/components/signout-button"
 import UserAvatar from "@/components/UserAvatar"
+import { FetchActivities } from "@/components/FetchActivities"
 
 export default async function ProfilePage() {
     const session = await auth()
@@ -18,7 +19,8 @@ export default async function ProfilePage() {
         <div>
             <pre>{JSON.stringify(session, null, 2)}</pre>
         </div>
-
+        <br />
+        <FetchActivities />
         <br />
         <SignOut />
     </>
