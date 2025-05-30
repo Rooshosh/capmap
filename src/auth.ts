@@ -14,8 +14,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
       profile(profile) {
+        console.log(profile)
         return {
-          id: String(profile.id), // Ensure the id is a string
+          id: String(profile.id), // Hack, would have expected provider package to handle this
           name: `${profile.firstname} ${profile.lastname}`,
           email: null,
           image: profile.profile,
