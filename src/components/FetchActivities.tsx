@@ -77,6 +77,7 @@ export type ActivityPreviewType = SummaryActivity & { imported?: boolean };
 // ActivityPreview component
 export function ActivityPreview({ activity, imported, onImport }: { activity: ActivityPreviewType; imported: boolean; onImport?: () => Promise<void> }) {
   const [importing, setImporting] = useState(false);
+  const [fetchingTrack, setFetchingTrack] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const title = activity.name;
@@ -106,6 +107,29 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
       }
     } finally {
       setImporting(false);
+    }
+  }
+
+  async function handleFetchTrack() {
+    setFetchingTrack(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/strava/activities/${activity.id}/streams?keys=latlng&key_by_type=true`);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to fetch GPS track");
+      }
+      const data = await res.json();
+      // Print the result in the browser console
+      console.log("GPS Track for activity", activity.id, data);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("An unknown error occurred");
+      }
+    } finally {
+      setFetchingTrack(false);
     }
   }
 
@@ -153,6 +177,27 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
           {importing ? 'Importing...' : 'Import'}
         </button>
       )}
+      {/* Fetch GPS Track button for imported activities */}
+      {imported && (
+        <button
+          onClick={handleFetchTrack}
+          disabled={fetchingTrack}
+          style={{
+            marginTop: 12,
+            padding: '8px 16px',
+            borderRadius: 6,
+            border: 'none',
+            background: fetchingTrack ? '#bdbdbd' : '#388e3c',
+            color: '#fff',
+            fontWeight: 500,
+            cursor: fetchingTrack ? 'not-allowed' : 'pointer',
+            fontSize: 15,
+            transition: 'background 0.2s',
+          }}
+        >
+          {fetchingTrack ? 'Fetching GPS Track...' : 'Fetch Activity GPS Track'}
+        </button>
+      )}
       {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
     </div>
   );
@@ -193,7 +238,6 @@ export function FetchActivities() {
     const importedRes = await fetch("/api/strava/imported-activity-ids");
     if (importedRes.ok) {
       const ids = await importedRes.json();
-      console.log("importedIds", ids);
       setImportedIds(ids.map((id: string | number) => id.toString()));
     }
   }
