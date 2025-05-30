@@ -1,27 +1,20 @@
-import { auth } from "@/auth"
-import { SignIn } from "@/components/signin-button"
-import { SignOut } from "@/components/signout-button"
-import UserAvatar from "@/components/UserAvatar"
-import { FetchActivities } from "@/components/FetchActivities"
+import Link from "next/link";
 
-export default async function ProfilePage() {
-    const session = await auth()
+import FullScreenMap from "@/components/FullScreenMap";
 
-    if (!session) return <>
-        <div>No current session</div>
-        <br />
-        <SignIn />
+export default function Home() {
+  return (
+    <>
+      <FullScreenMap />
+      <Link
+        href="/profile"
+        className="fixed bottom-6 right-6 z-50 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors border border-gray-200"
+        aria-label="Go to profile"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-gray-700">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75a.75.75 0 01-.75.75h-13.5a.75.75 0 01-.75-.75v-.75z" />
+        </svg>
+      </Link>
     </>
-
-    return <>
-        <div>Found session</div>
-        <UserAvatar />
-        <div>
-            <pre>{JSON.stringify(session, null, 2)}</pre>
-        </div>
-        <br />
-        <FetchActivities />
-        <br />
-        <SignOut />
-    </>
+  );
 }
