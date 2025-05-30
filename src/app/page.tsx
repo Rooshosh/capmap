@@ -1,13 +1,11 @@
-"use client";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 
-const Map = dynamic(() => import("../components/FullScreenMap"), { ssr: false });
+import FullScreenMap from "@/components/FullScreenMap";
 
 export default function Home() {
   return (
     <>
-      <Map />
+      <FullScreenMap />
       <Link
         href="/profile"
         className="fixed bottom-6 right-6 z-50 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors border border-gray-200"
