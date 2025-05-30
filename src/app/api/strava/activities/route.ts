@@ -1,4 +1,3 @@
-// TODO: Add /api/strava/activities/[id]/streams/route.ts for fetching activity streams from Strava
 import { NextResponse } from "next/server";
 import { getValidStravaAccessToken } from "@/strava";
 import { auth } from "@/auth";
