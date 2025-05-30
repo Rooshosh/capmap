@@ -75,7 +75,7 @@ type SummaryActivity = {
 export type ActivityPreviewType = SummaryActivity & { imported?: boolean };
 
 // ActivityPreview component
-export function ActivityPreview({ activity, imported, onImport }: { activity: ActivityPreviewType; imported: boolean; onImport?: () => Promise<void> }) {
+export function ActivityPreview({ activity, imported, hasTrack, onImport, onTrackImported }: { activity: ActivityPreviewType; imported: boolean; hasTrack: boolean; onImport?: () => Promise<void>; onTrackImported?: () => Promise<void> }) {
   const [importing, setImporting] = useState(false);
   const [fetchingTrack, setFetchingTrack] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +122,7 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
       const data = await res.json();
       // Print the result in the browser console
       console.log("GPS Track for activity", activity.id, data);
+      if (onTrackImported) await onTrackImported();
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
@@ -157,6 +158,7 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
       <div style={{ marginTop: 8, fontWeight: 500, color: imported ? '#388e3c' : '#bdbdbd' }}>
         {imported ? 'Imported' : 'Not Imported'}
       </div>
+      {/* Import button for not imported */}
       {!imported && (
         <button
           onClick={handleImport}
@@ -177,8 +179,13 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
           {importing ? 'Importing...' : 'Import'}
         </button>
       )}
-      {/* Fetch GPS Track button for imported activities */}
-      {imported && (
+      {/* GPS Track status for imported activities */}
+      {imported && hasTrack && (
+        <div style={{ marginTop: 12, color: '#388e3c', fontWeight: 500 }}>
+          GPS Track Imported
+        </div>
+      )}
+      {imported && !hasTrack && (
         <button
           onClick={handleFetchTrack}
           disabled={fetchingTrack || distance <= 0}
@@ -210,6 +217,7 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
 export function FetchActivities() {
   const [activities, setActivities] = useState<SummaryActivity[] | null>(null);
   const [importedIds, setImportedIds] = useState<string[]>([]);
+  const [activityIdsWithTrack, setActivityIdsWithTrack] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -218,6 +226,7 @@ export function FetchActivities() {
     setError(null);
     setActivities(null);
     setImportedIds([]);
+    setActivityIdsWithTrack([]);
     try {
       // Fetch summary activities
       const res = await fetch("/api/strava/activities");
@@ -227,6 +236,8 @@ export function FetchActivities() {
 
       // Fetch imported activity IDs
       await fetchImportedIds();
+      // Fetch activity IDs with GPS track
+      await fetchActivityIdsWithTrack();
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
@@ -243,6 +254,14 @@ export function FetchActivities() {
     if (importedRes.ok) {
       const ids = await importedRes.json();
       setImportedIds(ids.map((id: string | number) => id.toString()));
+    }
+  }
+
+  async function fetchActivityIdsWithTrack() {
+    const res = await fetch("/api/strava/activities-with-track");
+    if (res.ok) {
+      const ids = await res.json();
+      setActivityIdsWithTrack(ids.map((id: string | number) => id.toString()));
     }
   }
 
@@ -266,7 +285,12 @@ export function FetchActivities() {
               key={activity.id}
               activity={activity}
               imported={importedIds.includes(activity.id.toString())}
-              onImport={fetchImportedIds}
+              hasTrack={activityIdsWithTrack.includes(activity.id.toString())}
+              onImport={async () => {
+                await fetchImportedIds();
+                await fetchActivityIdsWithTrack();
+              }}
+              onTrackImported={fetchActivityIdsWithTrack}
             />
           ))}
         </div>
