@@ -114,7 +114,11 @@ export function ActivityPreview({ activity, imported, hasTrack, onImport, onTrac
     setFetchingTrack(true);
     setError(null);
     try {
-      const res = await fetch(`/api/strava/activities/${activity.id}/streams?keys=latlng&key_by_type=true`);
+      const res = await fetch("/api/strava/activities/gps-track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activityId: activity.id }),
+      });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to fetch GPS track");
