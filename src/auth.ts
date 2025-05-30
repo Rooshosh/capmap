@@ -2,9 +2,10 @@ import NextAuth from "next-auth"
 import Strava from "next-auth/providers/strava"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/prisma"
+import { Prisma } from "@prisma/client"
 
 interface StravaProfile {
-  id: number | string;
+  id: string;
   username?: string;
   resource_state?: number;
   firstname?: string;
@@ -35,8 +36,8 @@ interface StravaProfile {
   postable_clubs_count?: number;
   is_winback_via_upload?: boolean;
   is_winback_via_view?: boolean;
-  clubs?: any; // or a more specific type if you want
-  shoes?: any; // or a more specific type if you want
+  clubs?: Prisma.InputJsonValue;
+  shoes?: Prisma.InputJsonValue;
   // ...add any other fields you use
 }
 
@@ -70,6 +71,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Only remove athlete field for Strava accounts
       if (account?.provider === "strava" && profile) {
         const p = profile as StravaProfile
+
         await prisma.stravaAccount.upsert({
           where: { userId: user.id },
           update: {
@@ -108,7 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             shoes: p.shoes,
           },
           create: {
-            userId: user.id,
+            userId: user.id!,
             stravaId: String(p.id),
             username: p.username,
             resourceState: p.resource_state,
