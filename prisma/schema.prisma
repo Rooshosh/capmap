@@ -18,6 +18,7 @@ model User {
   sessions      Session[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
+  stravaAccount StravaAccount?
  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -76,4 +77,47 @@ model Authenticator {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
  
   @@id([userId, credentialID])
+}
+
+model StravaAccount {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  stravaId               String   @unique
+  username               String?
+  resourceState          Int?
+  firstname              String?
+  lastname               String?
+  bio                    String?
+  city                   String?
+  state                  String?
+  country                String?
+  sex                    String?
+  premium                Boolean?
+  summit                 Boolean?
+  createdAtStrava        DateTime? // Strava's created_at
+  updatedAtStrava        DateTime? // Strava's updated_at
+  badgeTypeId            Int?
+  weight                 Int?
+  profile                String?
+  profileMedium          String?
+  friend                 Int?      // nullable, can be null
+  follower               Int?      // nullable, can be null
+  blocked                Boolean?
+  canFollow              Boolean?
+  followerCount          Int?
+  friendCount            Int?
+  mutualFriendCount      Int?
+  athleteType            Int?
+  datePreference         String?
+  measurementPreference  String?
+  postableClubsCount     Int?
+  isWinbackViaUpload     Boolean?
+  isWinbackViaView       Boolean?
+  clubs                  Json?     // Store as JSON, or normalize if you want
+  shoes                  Json?     // Store as JSON, or normalize if you want
+
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 }
