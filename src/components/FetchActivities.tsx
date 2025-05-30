@@ -181,21 +181,25 @@ export function ActivityPreview({ activity, imported, onImport }: { activity: Ac
       {imported && (
         <button
           onClick={handleFetchTrack}
-          disabled={fetchingTrack}
+          disabled={fetchingTrack || distance <= 0}
           style={{
             marginTop: 12,
             padding: '8px 16px',
             borderRadius: 6,
             border: 'none',
-            background: fetchingTrack ? '#bdbdbd' : '#388e3c',
+            background: fetchingTrack || distance <= 0 ? '#bdbdbd' : '#388e3c',
             color: '#fff',
             fontWeight: 500,
-            cursor: fetchingTrack ? 'not-allowed' : 'pointer',
+            cursor: fetchingTrack || distance <= 0 ? 'not-allowed' : 'pointer',
             fontSize: 15,
             transition: 'background 0.2s',
           }}
         >
-          {fetchingTrack ? 'Fetching GPS Track...' : 'Fetch Activity GPS Track'}
+          {distance <= 0
+            ? 'No GPS Track Available'
+            : fetchingTrack
+            ? 'Fetching GPS Track...'
+            : 'Fetch Activity GPS Track'}
         </button>
       )}
       {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
