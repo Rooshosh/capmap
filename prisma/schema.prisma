@@ -121,3 +121,61 @@ model StravaAccount {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 }
+
+model DetailedActivity {
+  id                  String   @id
+  external_id         String? 
+  upload_id           String?
+  athlete             Json     // MetaAthlete
+  name                String
+  distance            Float
+  moving_time         Int
+  elapsed_time        Int
+  total_elevation_gain Float
+  elev_high           Float?
+  elev_low            Float?
+  type                String
+  sport_type          String
+  start_date          DateTime
+  start_date_local    DateTime
+  timezone            String
+  start_latlng        Json?
+  end_latlng          Json?
+  achievement_count   Int
+  kudos_count         Int
+  comment_count       Int
+  athlete_count       Int
+  photo_count         Int
+  total_photo_count   Int
+  map                 Json     // PolylineMap
+  trainer             Boolean
+  commute             Boolean
+  manual              Boolean
+  private             Boolean
+  flagged             Boolean
+  workout_type        Int?
+  upload_id_str       String?
+  average_speed       Float
+  max_speed           Float
+  has_kudoed          Boolean
+  hide_from_home      Boolean?
+  gear_id             String?
+  kilojoules          Float?
+  average_watts       Float?
+  device_watts        Boolean?
+  max_watts           Int?
+  weighted_average_watts Int?
+  description         String?
+  photos              Json?
+  gear                Json?
+  calories            Float?
+  segment_efforts     Json?
+  device_name         String?
+  embed_token         String?
+  splits_metric       Json?
+  splits_standard     Json?
+  laps                Json?
+  best_efforts        Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
