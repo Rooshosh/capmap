@@ -3,6 +3,43 @@ import Strava from "next-auth/providers/strava"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/prisma"
 
+interface StravaProfile {
+  id: number | string;
+  username?: string;
+  resource_state?: number;
+  firstname?: string;
+  lastname?: string;
+  bio?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  sex?: string;
+  premium?: boolean;
+  summit?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  badge_type_id?: number;
+  weight?: number;
+  profile?: string;
+  profile_medium?: string;
+  friend?: number | null;
+  follower?: number | null;
+  blocked?: boolean;
+  can_follow?: boolean;
+  follower_count?: number;
+  friend_count?: number;
+  mutual_friend_count?: number;
+  athlete_type?: number;
+  date_preference?: string;
+  measurement_preference?: string;
+  postable_clubs_count?: number;
+  is_winback_via_upload?: boolean;
+  is_winback_via_view?: boolean;
+  clubs?: any; // or a more specific type if you want
+  shoes?: any; // or a more specific type if you want
+  // ...add any other fields you use
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   
   adapter: PrismaAdapter(prisma),
@@ -32,78 +69,79 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account, profile }) {
       // Only remove athlete field for Strava accounts
       if (account?.provider === "strava" && profile) {
+        const p = profile as StravaProfile
         await prisma.stravaAccount.upsert({
           where: { userId: user.id },
           update: {
-            stravaId: String(profile.id),
-            username: profile.username,
-            resourceState: profile.resource_state,
-            firstname: profile.firstname,
-            lastname: profile.lastname,
-            bio: profile.bio,
-            city: profile.city,
-            state: profile.state,
-            country: profile.country,
-            sex: profile.sex,
-            premium: profile.premium,
-            summit: profile.summit,
-            createdAtStrava: profile.created_at ? new Date(profile.created_at) : undefined,
-            updatedAtStrava: profile.updated_at ? new Date(profile.updated_at) : undefined,
-            badgeTypeId: profile.badge_type_id,
-            weight: profile.weight,
-            profile: profile.profile,
-            profileMedium: profile.profile_medium,
-            friend: profile.friend,
-            follower: profile.follower,
-            blocked: profile.blocked,
-            canFollow: profile.can_follow,
-            followerCount: profile.follower_count,
-            friendCount: profile.friend_count,
-            mutualFriendCount: profile.mutual_friend_count,
-            athleteType: profile.athlete_type,
-            datePreference: profile.date_preference,
-            measurementPreference: profile.measurement_preference,
-            postableClubsCount: profile.postable_clubs_count,
-            isWinbackViaUpload: profile.is_winback_via_upload,
-            isWinbackViaView: profile.is_winback_via_view,
-            clubs: profile.clubs,
-            shoes: profile.shoes,
+            stravaId: String(p.id),
+            username: p.username,
+            resourceState: p.resource_state,
+            firstname: p.firstname,
+            lastname: p.lastname,
+            bio: p.bio,
+            city: p.city,
+            state: p.state,
+            country: p.country,
+            sex: p.sex,
+            premium: p.premium,
+            summit: p.summit,
+            createdAtStrava: p.created_at ? new Date(p.created_at) : undefined,
+            updatedAtStrava: p.updated_at ? new Date(p.updated_at) : undefined,
+            badgeTypeId: p.badge_type_id,
+            weight: p.weight,
+            profile: p.profile,
+            profileMedium: p.profile_medium,
+            friend: p.friend,
+            follower: p.follower,
+            blocked: p.blocked,
+            canFollow: p.can_follow,
+            followerCount: p.follower_count,
+            friendCount: p.friend_count,
+            mutualFriendCount: p.mutual_friend_count,
+            athleteType: p.athlete_type,
+            datePreference: p.date_preference,
+            measurementPreference: p.measurement_preference,
+            postableClubsCount: p.postable_clubs_count,
+            isWinbackViaUpload: p.is_winback_via_upload,
+            isWinbackViaView: p.is_winback_via_view,
+            clubs: p.clubs,
+            shoes: p.shoes,
           },
           create: {
             userId: user.id,
-            stravaId: String(profile.id),
-            username: profile.username,
-            resourceState: profile.resource_state,
-            firstname: profile.firstname,
-            lastname: profile.lastname,
-            bio: profile.bio,
-            city: profile.city,
-            state: profile.state,
-            country: profile.country,
-            sex: profile.sex,
-            premium: profile.premium,
-            summit: profile.summit,
-            createdAtStrava: profile.created_at ? new Date(profile.created_at) : undefined,
-            updatedAtStrava: profile.updated_at ? new Date(profile.updated_at) : undefined,
-            badgeTypeId: profile.badge_type_id,
-            weight: profile.weight,
-            profile: profile.profile,
-            profileMedium: profile.profile_medium,
-            friend: profile.friend,
-            follower: profile.follower,
-            blocked: profile.blocked,
-            canFollow: profile.can_follow,
-            followerCount: profile.follower_count,
-            friendCount: profile.friend_count,
-            mutualFriendCount: profile.mutual_friend_count,
-            athleteType: profile.athlete_type,
-            datePreference: profile.date_preference,
-            measurementPreference: profile.measurement_preference,
-            postableClubsCount: profile.postable_clubs_count,
-            isWinbackViaUpload: profile.is_winback_via_upload,
-            isWinbackViaView: profile.is_winback_via_view,
-            clubs: profile.clubs,
-            shoes: profile.shoes,
+            stravaId: String(p.id),
+            username: p.username,
+            resourceState: p.resource_state,
+            firstname: p.firstname,
+            lastname: p.lastname,
+            bio: p.bio,
+            city: p.city,
+            state: p.state,
+            country: p.country,
+            sex: p.sex,
+            premium: p.premium,
+            summit: p.summit,
+            createdAtStrava: p.created_at ? new Date(p.created_at) : undefined,
+            updatedAtStrava: p.updated_at ? new Date(p.updated_at) : undefined,
+            badgeTypeId: p.badge_type_id,
+            weight: p.weight,
+            profile: p.profile,
+            profileMedium: p.profile_medium,
+            friend: p.friend,
+            follower: p.follower,
+            blocked: p.blocked,
+            canFollow: p.can_follow,
+            followerCount: p.follower_count,
+            friendCount: p.friend_count,
+            mutualFriendCount: p.mutual_friend_count,
+            athleteType: p.athlete_type,
+            datePreference: p.date_preference,
+            measurementPreference: p.measurement_preference,
+            postableClubsCount: p.postable_clubs_count,
+            isWinbackViaUpload: p.is_winback_via_upload,
+            isWinbackViaView: p.is_winback_via_view,
+            clubs: p.clubs,
+            shoes: p.shoes,
           }
         })
       }
