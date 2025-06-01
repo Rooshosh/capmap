@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 type MetaAthlete = {
   id: number;
@@ -224,24 +224,58 @@ export function FetchActivities() {
   const [activityIdsWithTrack, setActivityIdsWithTrack] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const perPage = 30; // You can adjust this as needed
+  const [lastFetchCount, setLastFetchCount] = useState<number | null>(null);
+  const nextPageRef = useRef(1);
 
-  async function handleFetch() {
+  async function handleFetch(fetchPage = 1, append = false) {
     setLoading(true);
     setError(null);
-    setActivities(null);
-    setImportedIds([]);
-    setActivityIdsWithTrack([]);
+    if (!append) {
+      setActivities(null);
+      setImportedIds([]);
+      setActivityIdsWithTrack([]);
+      setPage(1);
+      nextPageRef.current = 1;
+    }
     try {
-      // Fetch summary activities
-      const res = await fetch("/api/strava/activities");
+      // Debug: Log the URL being fetched
+      const url = `/api/strava/activities?page=${fetchPage}&per_page=${perPage}`;
+      console.log('Fetching:', url);
+      // Fetch summary activities with pagination
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch activities");
       const data = await res.json();
-      setActivities(data);
-
+      // Debug: Log the response data
+      console.log('Fetched activities (page', fetchPage, '):', data);
+      setLastFetchCount(Array.isArray(data) ? data.length : 0);
+      if (append && activities) {
+        // Filter out activities that are already present by id
+        const existingIds = new Set(activities.map((a) => a.id));
+        const newUnique = Array.isArray(data) ? data.filter((a: SummaryActivity) => !existingIds.has(a.id)) : [];
+        setActivities(prev => {
+          const updated = [...(prev || []), ...newUnique];
+          // Debug: Log the updated activities list
+          console.log('Updated activities list:', updated.map(a => a.id));
+          return updated;
+        });
+      } else {
+        setActivities(data);
+        // Debug: Log the new activities list
+        console.log('Set activities list:', Array.isArray(data) ? data.map((a: SummaryActivity) => a.id) : data);
+      }
       // Fetch imported activity IDs
       await fetchImportedIds();
       // Fetch activity IDs with GPS track
       await fetchActivityIdsWithTrack();
+      if (append) {
+        setPage((prev) => prev + 1);
+        nextPageRef.current = fetchPage + 1;
+      } else {
+        setPage(1);
+        nextPageRef.current = 2;
+      }
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
@@ -271,33 +305,56 @@ export function FetchActivities() {
 
   return (
     <div>
-      <button onClick={handleFetch} disabled={loading} style={{ marginTop: 16 }}>
-        {loading ? "Loading..." : "Fetch Strava Activities"}
+      <button onClick={() => handleFetch(1, false)} disabled={loading} style={{ marginTop: 16 }}>
+        {loading && page === 1 ? "Loading..." : "Fetch Strava Activities"}
       </button>
       {error && <div style={{ color: "red" }}>{error}</div>}
       {activities && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 20,
-            marginTop: 24,
-          }}
-        >
-          {activities.map((activity) => (
-            <ActivityPreview
-              key={activity.id}
-              activity={activity}
-              imported={importedIds.includes(activity.id.toString())}
-              hasTrack={activityIdsWithTrack.includes(activity.id.toString())}
-              onImport={async () => {
-                await fetchImportedIds();
-                await fetchActivityIdsWithTrack();
+        <>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: 20,
+              marginTop: 24,
+            }}
+          >
+            {activities.map((activity) => (
+              <ActivityPreview
+                key={activity.id}
+                activity={activity}
+                imported={importedIds.includes(activity.id.toString())}
+                hasTrack={activityIdsWithTrack.includes(activity.id.toString())}
+                onImport={async () => {
+                  await fetchImportedIds();
+                  await fetchActivityIdsWithTrack();
+                }}
+                onTrackImported={fetchActivityIdsWithTrack}
+              />
+            ))}
+          </div>
+          {/* Load More button */}
+          <div style={{ textAlign: 'center', margin: '24px 0' }}>
+            <button
+              onClick={() => handleFetch(nextPageRef.current, true)}
+              disabled={loading || (lastFetchCount !== null && lastFetchCount < perPage)}
+              style={{
+                padding: '10px 24px',
+                borderRadius: 8,
+                border: 'none',
+                background: '#1976d2',
+                color: '#fff',
+                fontWeight: 500,
+                cursor: loading || (lastFetchCount !== null && lastFetchCount < perPage) ? 'not-allowed' : 'pointer',
+                fontSize: 16,
+                marginTop: 16,
+                opacity: loading || (lastFetchCount !== null && lastFetchCount < perPage) ? 0.6 : 1,
               }}
-              onTrackImported={fetchActivityIdsWithTrack}
-            />
-          ))}
-        </div>
+            >
+              {loading && page > 1 ? 'Loading...' : (lastFetchCount !== null && lastFetchCount < perPage) ? 'No More Activities' : 'Load More'}
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

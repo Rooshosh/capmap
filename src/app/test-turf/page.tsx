@@ -1,24 +1,8 @@
-import { prisma } from "@/prisma";
-import { ActivityTrack, DetailedActivity } from "@prisma/client/edge";
 import TestTurfGrid from "@/app/test-turf/TestTurfGrid";
 import React from "react";
 
-type TrackWithActivity = ActivityTrack & {
-  activity?: Pick<DetailedActivity, "name" | "id">;
-};
-
-export default async function TestTurfPage() {
-  // Fetch all tracks with related activity title
-  const tracks: TrackWithActivity[] = await prisma.activityTrack.findMany({
-    include: {
-      activity: {
-        select: { name: true, id: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return <TestTurfGrid tracks={tracks} />;
+export default function TestTurfPage() {
+  return <TestTurfGrid />;
 }
 
 // --- RandomPointsCell.tsx (client component, to be created) ---

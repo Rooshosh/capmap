@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/prisma";
-import { ActivityTrack } from "@prisma/client/edge";
+// import { ActivityTrack } from "@prisma/client/edge";
 // @ts-expect-error: No type definitions for @markroland/concave-hull
 import concaveHull from "@markroland/concave-hull";
 // import * as turf from "@turf/turf";
@@ -48,11 +48,19 @@ function subsample(points: [number, number][], maxPoints: number): [number, numb
     return result;
 }
 
-export async function GET(/* req: NextRequest */) {
-    const tracks = await prisma.activityTrack.findMany();
+export async function GET(req: NextRequest) {
+    const { searchParams } = req.nextUrl;
+    const skip = parseInt(searchParams.get('skip') || '0', 10);
+    const take = parseInt(searchParams.get('take') || '10', 10);
+    const tracks = await prisma.activityTrack.findMany({
+        select: { track: true },
+        skip,
+        take,
+        orderBy: { id: 'desc' },
+    });
     const features = tracks
-        .filter((track: ActivityTrack) => Array.isArray(track.track) && track.track.length > 3)
-        .map((track: ActivityTrack) => track.track as GPSTrack)
+        .filter((track) => Array.isArray(track.track) && track.track.length > 3)
+        .map((track) => track.track as GPSTrack)
         .filter(track => isLoop(track))
         .map(track => flipLatLngs(track))
         .map(track => subsample(track, 500))
@@ -68,14 +76,13 @@ export async function GET(/* req: NextRequest */) {
                     coordinates: [hull]
                 },
             };
-        })
-        // .flat()
-        // .filter(Boolean);
-
-        return NextResponse.json({
-            type: "FeatureCollection",
-            features,
         });
+
+    return NextResponse.json({
+        type: "FeatureCollection",
+        features,
+        rawCount: tracks.length,
+    });
 }
                 
 

@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from '@/prisma';
 import { NextRequest } from 'next/server';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || !session.user?.id) {
@@ -13,8 +13,14 @@ export async function GET() {
 
     const accessToken = await getValidStravaAccessToken(session.user.id);
 
+    // Read page and per_page from query params, with defaults
+    const { searchParams } = new URL(req.url);
+    const page = searchParams.get('page') || '1';
+    const per_page = searchParams.get('per_page') || '30';
+
     // Fetch activities from Strava API
-    const res = await fetch("https://www.strava.com/api/v3/athlete/activities", {
+    const stravaUrl = `https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${per_page}`;
+    const res = await fetch(stravaUrl, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
