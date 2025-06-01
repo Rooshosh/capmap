@@ -6,7 +6,6 @@ import concaveHull from "@markroland/concave-hull";
 // import * as turf from "@turf/turf";
 // import concave from "@turf/concave";
 // import rewind from '@turf/rewind';
-// import { ActivityTrack } from "@prisma/client";
 //import { featureCollection, point } from "@turf/turf";
 // import concaveman from "concaveman";
 // import concaveman from "@/lib/concaveman-wrapper";

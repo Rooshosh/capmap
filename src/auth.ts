@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import Strava from "next-auth/providers/strava"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/prisma"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/client/edge"
 
 interface StravaProfile {
   id: string;
