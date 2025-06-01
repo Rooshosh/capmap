@@ -1,4 +1,4 @@
-// @ts-ignore: No type definitions for @markroland/concave-hull
+// @ts-expect-error: No type definitions for @markroland/concave-hull
 import concaveHull from "@markroland/concave-hull";
 import concave from "@turf/concave";
 import { featureCollection, point } from "@turf/helpers";

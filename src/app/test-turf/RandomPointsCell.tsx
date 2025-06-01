@@ -15,19 +15,6 @@ function generateRandomPoints(count = 20, bbox = [6.515, 43.275, 6.525, 43.285])
   return points;
 }
 
-// Helper to get SVG path for a polygon or ring
-function getPolygonPath(coords: [number, number][][], project: (pt: [number, number]) => [number, number]) {
-  let path = "";
-  coords.forEach(ring => {
-    ring.forEach(([lon, lat], i) => {
-      const [x, y] = project([lon, lat]);
-      path += (i === 0 ? `M${x},${y}` : `L${x},${y}`);
-    });
-    path += "Z";
-  });
-  return path;
-}
-
 export default function RandomPointsCell({ width, height, algorithm = "markroland" }: Props) {
     console.log("RandomPointsCell rendered");
     

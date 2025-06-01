@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/prisma";
 import { ActivityTrack } from "@prisma/client/edge";
-// @ts-ignore: No type definitions for @markroland/concave-hull
+// @ts-expect-error: No type definitions for @markroland/concave-hull
 import concaveHull from "@markroland/concave-hull";
 // import * as turf from "@turf/turf";
 // import concave from "@turf/concave";

@@ -17,7 +17,6 @@ export default function TrackCell({ width, height, points, title, algorithm = "m
   const [showHull, setShowHull] = useState(false);
   const [hullPath, setHullPath] = useState("");
   const [hull, setHull] = useState<[number, number][] | null>(null);
-  const [loading, setLoading] = useState(false);
 
   // Reset param when algorithm changes
   useEffect(() => {
@@ -92,18 +91,17 @@ export default function TrackCell({ width, height, points, title, algorithm = "m
           <button
             style={{
               marginLeft: 16,
-              background: loading ? '#aaa' : 'var(--button-bg, #22c55e)',
+              background: 'var(--button-bg, #22c55e)',
               color: 'var(--button-fg, #fff)',
               border: 'none',
               borderRadius: 6,
               padding: '8px 16px',
               fontWeight: 500,
-              cursor: loading ? 'not-allowed' : 'pointer'
+              cursor: 'pointer'
             }}
             onClick={regenerateHull}
-            disabled={loading}
           >
-            {loading ? 'Calculating...' : 'Regenerate hull'}
+            Regenerate hull
           </button>
         )}
       </div>
