@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/prisma";
-import * as turf from "@turf/turf";
-import concave from "@turf/concave";
 import { ActivityTrack } from "@prisma/client/edge";
-import rewind from '@turf/rewind';
+// @ts-ignore: No type definitions for @markroland/concave-hull
+import concaveHull from "@markroland/concave-hull";
+// import * as turf from "@turf/turf";
+// import concave from "@turf/concave";
+// import rewind from '@turf/rewind';
 // import { ActivityTrack } from "@prisma/client";
+//import { featureCollection, point } from "@turf/turf";
+// import concaveman from "concaveman";
+// import concaveman from "@/lib/concaveman-wrapper";
+// import concaveman from "concaveman";
 
 // Haversine distance in meters between two [lat, lng] points
 function haversine([lat1, lng1]: [number, number], [lat2, lng2]: [number, number]) {
@@ -33,6 +39,16 @@ function flipLatLngs(latlngs: GPSTrack): GPSTrack {
 
 type GPSTrack = [number, number][];
 
+function subsample(points: [number, number][], maxPoints: number): [number, number][] {
+    if (points.length <= maxPoints) return points;
+    const step = points.length / maxPoints;
+    const result: [number, number][] = [];
+    for (let i = 0; i < maxPoints; i++) {
+        result.push(points[Math.floor(i * step)]);
+    }
+    return result;
+}
+
 export async function GET(/* req: NextRequest */) {
     const tracks = await prisma.activityTrack.findMany();
     const features = tracks
@@ -40,18 +56,31 @@ export async function GET(/* req: NextRequest */) {
         .map((track: ActivityTrack) => track.track as GPSTrack)
         .filter(track => isLoop(track))
         .map(track => flipLatLngs(track))
+        .map(track => subsample(track, 500))
+        .toReversed()
         .map(track => {
-            const points = turf.featureCollection(track.map(coord => turf.point(coord)));
-            const hull = concave(points, { maxEdge: closeThreshold / 1000 });
-            if (!hull) return null;
-            let geometry = hull.geometry;
-            if (geometry.type === "Polygon") {
-                // Only keep the outer ring
-                geometry = {
-                    ...geometry,
-                    coordinates: [geometry.coordinates[0]]
-                };
-            } else if (geometry.type === "MultiPolygon") {
+            const hullModule = concaveHull();
+            const k = 3; // Sensible default for concavity
+            const hull = hullModule.calculate(track, k);
+            return {
+                type: "Feature",
+                geometry: {
+                    type: "Polygon",
+                    coordinates: [hull]
+                },
+            };
+        })
+        // .flat()
+        // .filter(Boolean);
+
+        return NextResponse.json({
+            type: "FeatureCollection",
+            features,
+        });
+}
+                
+
+/*
                 // Find the largest polygon by area
                 let maxArea = 0;
                 let largest = geometry.coordinates[0];
@@ -67,19 +96,16 @@ export async function GET(/* req: NextRequest */) {
                     type: "Polygon",
                     coordinates: [largest[0]]
                 };
+                return {
+                    type: "Feature",
+                    // geometry: "geometry" in solid ? solid.geometry : solid,
+                    geometry,
+                    properties: {  },
+                };
             }
             // Ensure correct winding order
-            const solid = rewind({ type: "Feature", geometry, properties: {} }, { reverse: false });
-            return {
-                type: "Feature",
-                geometry: "geometry" in solid ? solid.geometry : solid,
-                properties: { /* TODO: add activityId and/or similar*/ },
-            };
+            // const solid = rewind({ type: "Feature", geometry, properties: {} }, { reverse: false });
+            
         })
-        .filter(Boolean);
-
-    return NextResponse.json({
-        type: "FeatureCollection",
-        features,
-    });
 } 
+*/
