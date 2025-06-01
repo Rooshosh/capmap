@@ -27,6 +27,20 @@ export default function RandomPointsCell({ width, height, algorithm = "markrolan
   const [hullPath, setHullPath] = useState("");
   const [hull, setHull] = useState<[number, number][] | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const [svgSize, setSvgSize] = useState({ w: width, h: height });
+
+  // Responsive SVG size
+  useEffect(() => {
+    function updateSvgSize() {
+      if (svgRef.current) {
+        const rect = svgRef.current.getBoundingClientRect();
+        setSvgSize({ w: rect.width, h: rect.height });
+      }
+    }
+    updateSvgSize();
+    window.addEventListener('resize', updateSvgSize);
+    return () => window.removeEventListener('resize', updateSvgSize);
+  }, [width, height]);
 
   useEffect(() => {
     setParam(algorithm === "turf" ? 100 : 3);
@@ -36,7 +50,7 @@ export default function RandomPointsCell({ width, height, algorithm = "markrolan
     setPoints(generateRandomPoints(numPoints));
   }, [numPoints]);
 
-  const { project, unproject } = useMemo(() => Projector(points, width, height), [points, width, height]);
+  const { project, unproject } = useMemo(() => Projector(points, svgSize.w, svgSize.h), [points, svgSize]);
 
   // When the slider changes, generate new random points
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,92 +132,98 @@ export default function RandomPointsCell({ width, height, algorithm = "markrolan
   }
 
   return (
-    <div style={{ background: 'var(--cell-bg, rgb(30 30 30 / 0.9))', borderRadius: 12, boxShadow: "0 2px 8px #0003", padding: 12, border: '1px solid var(--border, #333)' }}>
-      <h2 style={{ color: 'var(--foreground, CanvasText)' }}>Random Points</h2>
-      <div style={{ margin: "16px 0" }}>
-        <label style={{ color: 'var(--foreground, CanvasText)', marginRight: 16 }}>
-          Number of points:
-          <input
-            type="range"
-            min={1}
-            max={1000}
-            step={1}
-            value={numPoints}
-            onChange={handleSliderChange}
-            style={{ width: 120, margin: "0 8px" }}
-          />
-          <span>{numPoints}</span>
-        </label>
-        <label style={{ color: 'var(--foreground, CanvasText)' }}>
-          {algorithm === "turf" ? "maxEdge (meters):" : "k (concavity):"}
-          <input
-            type="range"
-            min={algorithm === "turf" ? 1 : 3}
-            max={algorithm === "turf" ? 1000 : Math.max(3, points.length)}
-            step={1}
-            value={param}
-            onChange={e => setParam(Number(e.target.value))}
-            style={{ width: 120, margin: "0 8px" }}
-            disabled={algorithm === "turf" ? false : points.length < 3}
-          />
-          <span>{param}</span>
-        </label>
-        {algorithm !== "turf" && (
-          <button
-            style={{
-              marginLeft: 16,
-              background: 'var(--button-bg, #22c55e)',
-              color: 'var(--button-fg, #fff)',
-              border: 'none',
-              borderRadius: 6,
-              padding: '8px 16px',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}
-            onClick={regenerateHull}
-          >
-            Regenerate hull
-          </button>
-        )}
-      </div>
-      <svg
-        ref={svgRef}
-        width={width}
-        height={height}
-        style={{ border: "1px solid var(--border, #333)", touchAction: "none", cursor: dragIndex !== null ? "grabbing" : "pointer", background: 'var(--svg-bg, #18181b)' }}
-        onClick={onSvgClick}
-      >
-        {/* Draw concave hull */}
-        {points.length === 0 ? (
-          <text x="20" y="40" fill="var(--error, #f87171)">Generating random points…</text>
-        ) : hullPath ? (
-          <path d={hullPath} fill="var(--hull-fill, #e6394622)" stroke="var(--hull-stroke, #e63946)" strokeWidth={2} />
-        ) : (
-          <text x="20" y="40" fill="var(--error, #f87171)">No concave hull generated</text>
-        )}
-        {/* Draw points */}
-        {points.map(([lon, lat], i) => {
-          const [x, y] = project([lon, lat]);
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={8}
-              fill="var(--point-fill, #60a5fa)"
-              stroke="var(--point-stroke, #fff)"
-              strokeWidth={2}
-              style={{ cursor: "grab" }}
-              onPointerDown={e => onPointerDown(e, i)}
-              onClick={e => onPointClick(e, i)}
-              onContextMenu={e => onPointClick(e, i)}
+    <div style={{ background: 'var(--cell-bg, rgb(30 30 30 / 0.9))', borderRadius: 12, boxShadow: "0 2px 8px #0003", padding: 0, border: '1px solid var(--border, #333)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: 12, flex: '0 0 auto' }}>
+        <h2 style={{ color: 'var(--foreground, CanvasText)' }}>Random Points</h2>
+        <div style={{ margin: "16px 0" }}>
+          <label style={{ color: 'var(--foreground, CanvasText)', marginRight: 16 }}>
+            Number of points:
+            <input
+              type="range"
+              min={1}
+              max={1000}
+              step={1}
+              value={numPoints}
+              onChange={handleSliderChange}
+              style={{ width: 120, margin: "0 8px" }}
             />
-          );
-        })}
-      </svg>
+            <span>{numPoints}</span>
+          </label>
+          <label style={{ color: 'var(--foreground, CanvasText)' }}>
+            {algorithm === "turf" ? "maxEdge (meters):" : "k (concavity):"}
+            <input
+              type="range"
+              min={algorithm === "turf" ? 1 : 3}
+              max={algorithm === "turf" ? 1000 : Math.max(3, points.length)}
+              step={1}
+              value={param}
+              onChange={e => setParam(Number(e.target.value))}
+              style={{ width: 120, margin: "0 8px" }}
+              disabled={algorithm === "turf" ? false : points.length < 3}
+            />
+            <span>{param}</span>
+          </label>
+          {algorithm !== "turf" && (
+            <button
+              style={{
+                marginLeft: 16,
+                background: 'var(--button-bg, #22c55e)',
+                color: 'var(--button-fg, #fff)',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px 16px',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+              onClick={regenerateHull}
+            >
+              Regenerate hull
+            </button>
+          )}
+        </div>
+      </div>
+      <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
+        <svg
+          ref={svgRef}
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${svgSize.w} ${svgSize.h}`}
+          style={{ border: "1px solid var(--border, #333)", touchAction: "none", cursor: dragIndex !== null ? "grabbing" : "pointer", background: 'var(--svg-bg, #18181b)', width: '100%', height: '100%', maxHeight: '100%', borderRadius: 8, display: 'block' }}
+          onClick={onSvgClick}
+          preserveAspectRatio="xMidYMid meet"
+        >
+          {/* Draw concave hull */}
+          {points.length === 0 ? (
+            <text x="20" y="40" fill="var(--error, #f87171)">Generating random points…</text>
+          ) : hullPath ? (
+            <path d={hullPath} fill="var(--hull-fill, #e6394622)" stroke="var(--hull-stroke, #e63946)" strokeWidth={2} />
+          ) : (
+            <text x="20" y="40" fill="var(--error, #f87171)">No concave hull generated</text>
+          )}
+          {/* Draw points */}
+          {points.map(([lon, lat], i) => {
+            const [x, y] = project([lon, lat]);
+            return (
+              <circle
+                key={i}
+                cx={x}
+                cy={y}
+                r={8}
+                fill="var(--point-fill, #60a5fa)"
+                stroke="var(--point-stroke, #fff)"
+                strokeWidth={2}
+                style={{ cursor: "grab" }}
+                onPointerDown={e => onPointerDown(e, i)}
+                onClick={e => onPointClick(e, i)}
+                onContextMenu={e => onPointClick(e, i)}
+              />
+            );
+          })}
+        </svg>
+      </div>
       <button style={{ marginTop: 16, background: 'var(--button-bg, #2563eb)', color: 'var(--button-fg, #fff)', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 500, cursor: 'pointer' }} onClick={() => setPoints(generateRandomPoints(numPoints))}>Regenerate random points</button>
       {hull && (
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, padding: 12 }}>
           <button onClick={() => setShowHull(v => !v)} style={{ cursor: 'pointer', background: 'var(--button-bg, #18181b)', color: 'var(--button-fg, #fff)', border: '1px solid var(--border, #333)', borderRadius: 4, padding: '4px 12px', fontSize: 14 }}>
             {showHull ? 'Hide' : 'Show'} hull object
           </button>
