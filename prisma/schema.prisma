@@ -122,6 +122,13 @@ model StravaAccount {
   updatedAt DateTime @updatedAt
 }
 
+model FakeUser {
+  id    String  @id @default(cuid())
+  name  String
+  color String
+  activities DetailedActivity[]
+}
+
 model DetailedActivity {
   id                            String         @id
   external_id                   String?
@@ -195,6 +202,8 @@ model DetailedActivity {
   stats_visibility              Json?
   similar_activities            Json?
   available_zones               Json?
+  fakeUserId                    String?
+  fakeUser                      FakeUser? @relation(fields: [fakeUserId], references: [id])
   createdAt                     DateTime       @default(now())
   updatedAt                     DateTime       @updatedAt
   ActivityTrack                 ActivityTrack?

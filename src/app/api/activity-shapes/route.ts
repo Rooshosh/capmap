@@ -53,7 +53,16 @@ function subsample(points: [number, number][], maxPoints: number): [number, numb
 export async function GET(_req: NextRequest) {
     const rows = await prisma.activityTrack.findMany({
         where: { shape: { not: Prisma.JsonNull } },
-        select: { shape: true },
+        select: {
+            shape: true,
+            activity: {
+                select: {
+                    fakeUser: {
+                        select: { name: true, color: true }
+                    }
+                }
+            }
+        },
         orderBy: { id: "desc" },
     });
 
@@ -64,6 +73,10 @@ export async function GET(_req: NextRequest) {
             geometry: {
                 type: "Polygon",
                 coordinates: [row.shape],
+            },
+            properties: {
+                user: row.activity?.fakeUser?.name ?? null,
+                color: row.activity?.fakeUser?.color ?? null,
             },
         }));
 
