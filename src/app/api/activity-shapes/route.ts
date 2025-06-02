@@ -1,8 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
+/* eslint-disable */
 import { prisma } from "@/prisma";
 // import { ActivityTrack } from "@prisma/client/edge";
 // @ts-expect-error: No type definitions for @markroland/concave-hull
-import concaveHull from "@markroland/concave-hull";
+// import concaveHull from "@markroland/concave-hull";
 // import * as turf from "@turf/turf";
 // import concave from "@turf/concave";
 // import rewind from '@turf/rewind';
@@ -48,40 +49,27 @@ function subsample(points: [number, number][], maxPoints: number): [number, numb
     return result;
 }
 
-export async function GET(req: NextRequest) {
-    const { searchParams } = req.nextUrl;
-    const skip = parseInt(searchParams.get('skip') || '0', 10);
-    const take = parseInt(searchParams.get('take') || '10', 10);
-    const tracks = await prisma.activityTrack.findMany({
-        select: { track: true },
-        skip,
-        take,
-        orderBy: { id: 'desc' },
+export async function GET(_req: NextRequest) {
+    const rows = await prisma.activityTrack.findMany({
+        where: { shape: { not: null } },
+        select: { shape: true },
+        orderBy: { id: "desc" },
     });
-    const features = tracks
-        .filter((track) => Array.isArray(track.track) && track.track.length > 3)
-        .map((track) => track.track as GPSTrack)
-        .filter(track => isLoop(track))
-        .map(track => flipLatLngs(track))
-        .map(track => subsample(track, 500))
-        .toReversed()
-        .map(track => {
-            const hullModule = concaveHull();
-            const k = 3; // Sensible default for concavity
-            const hull = hullModule.calculate(track, k);
-            return {
-                type: "Feature",
-                geometry: {
-                    type: "Polygon",
-                    coordinates: [hull]
-                },
-            };
-        });
+
+    type Hull = [number, number][];
+    const features = rows
+        .filter((row: { shape: unknown }): row is { shape: Hull } => Array.isArray(row.shape))
+        .map((row: { shape: Hull }) => ({
+            type: "Feature",
+            geometry: {
+                type: "Polygon",
+                coordinates: [row.shape],
+            },
+        }));
 
     return NextResponse.json({
         type: "FeatureCollection",
         features,
-        rawCount: tracks.length,
     });
 }
                 
