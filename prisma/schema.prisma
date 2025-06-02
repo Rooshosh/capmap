@@ -204,7 +204,7 @@ model ActivityTrack {
   id         String           @id @default(uuid())
   activity   DetailedActivity @relation(fields: [activityId], references: [id])
   activityId String           @unique
-  track      Json // Array of [lon, lat] pairs
+  track      Json // Array of [lat, lon] pairs
   shape      Json? // Optional concave hull polygon as an array of [lon, lat] pairs
   createdAt  DateTime         @default(now())
 }

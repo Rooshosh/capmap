@@ -2,11 +2,12 @@
 
 import Map, { NavigationControl, GeolocateControl, Source, Layer } from "react-map-gl/mapbox";
 import { useEffect, useState } from "react";
+import type { FeatureCollection } from "geojson";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 export default function FullScreenMap() {
-  const [shapeGeojson, setShapeGeojson] = useState<any>(null);
+  const [shapeGeojson, setShapeGeojson] = useState<FeatureCollection | null>(null);
 
   useEffect(() => {
     fetch("/api/activity-shapes")

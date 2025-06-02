@@ -1,8 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 /* eslint-disable */
 import { prisma } from "@/prisma";
+import { Prisma } from "@prisma/client/edge";
 // import { ActivityTrack } from "@prisma/client/edge";
-// @ts-expect-error: No type definitions for @markroland/concave-hull
+// // @ts-expect-error: No type definitions for @markroland/concave-hull
 // import concaveHull from "@markroland/concave-hull";
 // import * as turf from "@turf/turf";
 // import concave from "@turf/concave";
@@ -51,15 +52,14 @@ function subsample(points: [number, number][], maxPoints: number): [number, numb
 
 export async function GET(_req: NextRequest) {
     const rows = await prisma.activityTrack.findMany({
-        where: { shape: { not: null } },
+        where: { shape: { not: Prisma.JsonNull } },
         select: { shape: true },
         orderBy: { id: "desc" },
     });
 
-    type Hull = [number, number][];
     const features = rows
-        .filter((row: { shape: unknown }): row is { shape: Hull } => Array.isArray(row.shape))
-        .map((row: { shape: Hull }) => ({
+        .filter(row => Array.isArray(row.shape) && row.shape.length > 0)
+        .map(row => ({
             type: "Feature",
             geometry: {
                 type: "Polygon",

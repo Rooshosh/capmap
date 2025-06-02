@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getValidStravaAccessToken } from "@/strava";
 import { auth } from "@/auth";
 import { prisma } from "@/prisma";
+import { Prisma } from "@prisma/client";
 // @ts-expect-error: No type definitions for @markroland/concave-hull
 import concaveHull from "@markroland/concave-hull";
 
@@ -92,8 +93,8 @@ export async function POST(req: NextRequest) {
 
       await prisma.activityTrack.upsert({
         where: { activityId: activityIdStr },
-        update: { track: rawTrack, shape: shape ?? undefined },
-        create: { activityId: activityIdStr, track: rawTrack, shape },
+        update: { track: rawTrack, shape: shape ?? Prisma.JsonNull },
+        create: { activityId: activityIdStr, track: rawTrack, shape: shape ?? Prisma.JsonNull },
       });
     }
 
