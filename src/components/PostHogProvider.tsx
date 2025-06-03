@@ -7,7 +7,12 @@ import { usePathname, useSearchParams } from "next/navigation"
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+    if (!posthogKey) {
+      console.warn("PostHog key not found in environment variables");
+      return;
+    }
+    posthog.init(posthogKey, {
       api_host: "/ingest",
       ui_host: "https://eu.posthog.com",
       capture_pageview: false, // We capture pageviews manually
