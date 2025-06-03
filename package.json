@@ -18,6 +18,7 @@
     "@turf/concave": "^7.2.0",
     "@turf/turf": "^7.2.0",
     "@types/concaveman": "^1.1.6",
+    "@vercel/analytics": "^1.5.0",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
     "mapbox-gl": "^3.12.0",
