@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { prisma } from '@/prisma';
-import { fetchStravaActivity, fetchStravaTrack } from '@/lib/strava';
+import { ActivitiesService } from '@/lib/strava-client/generated/services/ActivitiesService';
+import { StreamsService } from '@/lib/strava-client/generated/services/StreamsService';
 
 export const activitiesRouter = router({
   // Get list of activities with pagination
@@ -10,11 +11,9 @@ export const activitiesRouter = router({
       page: z.number().min(1).default(1),
       perPage: z.number().min(1).max(100).default(30),
     }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const { page, perPage } = input;
-      const skip = (page - 1) * perPage;
-
-      const activities = await fetchStravaActivity(skip, perPage);
+      const activities = await ActivitiesService.getLoggedInAthleteActivities({ page, perPage });
       return activities;
     }),
 
@@ -42,15 +41,13 @@ export const activitiesRouter = router({
     .input(z.object({
       activityId: z.number(),
     }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { activityId } = input;
-      const activity = await fetchStravaActivity(0, 1, activityId);
-      
-      if (!activity || activity.length === 0) {
+      const activity = await ActivitiesService.getActivityById({ id: activityId });
+      if (!activity) {
         throw new Error('Activity not found');
       }
-
-      const data = activity[0];
+      const data = activity;
       await prisma.detailedActivity.create({
         data: {
           id: String(data.id),
@@ -108,14 +105,16 @@ export const activitiesRouter = router({
     .input(z.object({
       activityId: z.number(),
     }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { activityId } = input;
-      const track = await fetchStravaTrack(activityId);
-      
+      const track = await StreamsService.getActivityStreams({
+        id: activityId,
+        keys: ['latlng', 'distance', 'altitude', 'time'],
+        keyByType: true,
+      });
       if (!track) {
         throw new Error('Track not found');
       }
-
       await prisma.activityTrack.create({
         data: {
           activityId: String(activityId),

@@ -1,11 +1,10 @@
-import { initTRPC } from '@trpc/server';
-import { type FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import { initTRPC, TRPCError } from '@trpc/server';
 import { auth } from '@/auth';
 
 /**
  * Context type definition
  */
-export async function createContext(opts: FetchCreateContextFnOptions) {
+export async function createContext() {
   const session = await auth();
   return {
     session,
@@ -18,7 +17,7 @@ export type Context = Awaited<ReturnType<typeof createContext>>;
  * Initialization of tRPC backend
  * Should be done only once per backend!
  */
-const t = initTRPC.context<Context>().create();
+const t = initTRPC.create();
 
 /**
  * Export reusable router and procedure helpers
@@ -26,21 +25,18 @@ const t = initTRPC.context<Context>().create();
  */
 export const router = t.router;
 export const publicProcedure = t.procedure;
-export const middleware = t.middleware;
+
+const isAuthed = t.middleware(async ({ next }) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  return next({
+    ctx: { session },
+  });
+});
 
 /**
  * Protected procedure that requires authentication
  */
-export const protectedProcedure = t.procedure.use(
-  middleware(async ({ ctx, next }) => {
-    if (!ctx.session?.user) {
-      throw new Error('Not authenticated');
-    }
-    return next({
-      ctx: {
-        ...ctx,
-        session: ctx.session,
-      },
-    });
-  })
-); 
+export const protectedProcedure = t.procedure.use(isAuthed); 

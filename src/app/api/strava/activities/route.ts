@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getValidStravaAccessToken } from "@/strava";
 import { auth } from "@/auth";
 import { prisma } from '@/prisma';
 import { NextRequest } from 'next/server';
+import { ActivitiesService } from '@/lib/strava-client/generated/services/ActivitiesService';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,27 +11,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const accessToken = await getValidStravaAccessToken(session.user.id);
-
     // Read page and per_page from query params, with defaults
     const { searchParams } = new URL(req.url);
     const page = searchParams.get('page') || '1';
     const per_page = searchParams.get('per_page') || '30';
 
-    // Fetch activities from Strava API
-    const stravaUrl = `https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${per_page}`;
-    const res = await fetch(stravaUrl, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!res.ok) {
-      const error = await res.text();
-      return NextResponse.json({ error }, { status: res.status });
-    }
-
-    const activities = await res.json();
+    // Fetch activities using the generated client
+    const activities = await ActivitiesService.getLoggedInAthleteActivities({ page: Number(page), perPage: Number(per_page) });
     return NextResponse.json(activities);
   } catch (error: unknown) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
@@ -50,21 +36,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing activityId" }, { status: 400 });
     }
 
-    const accessToken = await getValidStravaAccessToken(session.user.id);
-
-    // Fetch detailed activity from Strava API
-    const res = await fetch(`https://www.strava.com/api/v3/activities/${activityId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!res.ok) {
-      const error = await res.text();
-      return NextResponse.json({ error }, { status: res.status });
-    }
-
-    const activity = await res.json();
+    // Fetch detailed activity using the generated client
+    const activity = await ActivitiesService.getActivityById({ id: activityId });
 
     // Store in DB (upsert to avoid duplicates)
     const id = activity.id.toString();

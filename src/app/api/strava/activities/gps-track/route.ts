@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getValidStravaAccessToken } from "@/strava";
 import { auth } from "@/auth";
 import { prisma } from "@/prisma";
 import { Prisma } from "@prisma/client";
+import { StreamsService } from '@/lib/strava-client/generated/services/StreamsService';
 // @ts-expect-error: No type definitions for @markroland/concave-hull
 import concaveHull from "@markroland/concave-hull";
 
@@ -56,22 +56,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing activityId" }, { status: 400 });
     }
 
-    const accessToken = await getValidStravaAccessToken(session.user.id);
-
-    // Fetch GPS stream from Strava
-    const url = `https://www.strava.com/api/v3/activities/${activityId}/streams?keys=latlng&key_by_type=true`;
-    const stravaRes = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    // Fetch GPS stream using the generated client
+    const data = await StreamsService.getActivityStreams({
+      id: activityId,
+      keys: ['latlng'],
+      keyByType: true,
     });
-
-    if (!stravaRes.ok) {
-      const error = await stravaRes.json();
-      return NextResponse.json({ error: error.message || "Failed to fetch activity streams from Strava" }, { status: stravaRes.status });
-    }
-
-    const data = await stravaRes.json();
 
     // Store GPS track (and precalculated shape) in ActivityTrack if latlng stream is present
     if (data && data.latlng && Array.isArray(data.latlng.data)) {
