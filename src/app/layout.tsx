@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
+import { PostHogProvider } from "../components/PostHogProvider";
 import { Analytics } from "@vercel/analytics/next"
 import { TRPCProvider } from "./providers";
 
@@ -30,7 +32,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <TRPCProvider>
-          {children}
+          <PostHogProvider>
+            {children}
+          </PostHogProvider>
         </TRPCProvider>
         <Analytics />
       </body>
