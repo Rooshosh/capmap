@@ -71,10 +71,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // },
   events: {
     async signIn({ user, account, profile }) {
-      console.log("signIn");
-      console.log("User:", user);
-      console.log("Account:", account);
-      console.log("Profile:", profile);
 
       if (account?.provider === "strava" && profile) {
         const p = profile as StravaProfile;
