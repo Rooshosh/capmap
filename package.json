@@ -15,6 +15,11 @@
     "@prisma/client": "^6.8.2",
     "@prisma/extension-accelerate": "^2.0.1",
     "@supabase/supabase-js": "^2.49.8",
+    "@tanstack/react-query": "^5.80.5",
+    "@trpc/client": "^11.3.0",
+    "@trpc/next": "^11.3.0",
+    "@trpc/react-query": "^11.3.0",
+    "@trpc/server": "^11.3.0",
     "@turf/concave": "^7.2.0",
     "@turf/turf": "^7.2.0",
     "@types/concaveman": "^1.1.6",
@@ -27,7 +32,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-map-gl": "^8.0.4",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "zod": "^3.25.51"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
